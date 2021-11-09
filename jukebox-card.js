@@ -247,19 +247,6 @@ class JukeboxCard extends HTMLElement {
         delete this._songEntity;
         this._song.innerHTML = '';
 
-        /*
-        // If there is a song entity, display it, otherwise clear it
-        if (e.currentTarget.stationSong)
-        {
-            this._song.innerHTML = this.hass.states[e.currentTarget.stationSong].state;
-            this._songEntity = e.currentTarget.stationSong;
-        } else
-        {
-            delete this._songEntity;
-            this._song.innerHTML = '';
-        }
-        */
-
         this.hass.callService('media_player', 'play_media', {
             entity_id: this._selectedSpeaker,
             media_content_id: e.currentTarget.stationUrl,
