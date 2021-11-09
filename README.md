@@ -2,7 +2,7 @@
 
 This is a fork of original project made/edited/updated by [lukx](https://github.com/lukx/home-assistant-jukebox). I added couple of new functions like:
 
-* Displaying station logo image
+* Displaying station logo image and station name on media player
 * Adding option to display custom sensor text (song author and title)
 * Fix (workaround) for long playback start for specific radio stations
 * Fix for icons not showing up after HA update to version 2021.11.X
