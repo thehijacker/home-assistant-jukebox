@@ -1,4 +1,4 @@
-console.info(`%c  HOME-ASSISTANT-JUKEBOX  %c  v2021_11_09_v1`, 'color: orange; font-weight: bold; background: black', 'color: white; font-weight: bold; background: dimgray');
+console.info(`%c  HOME-ASSISTANT-JUKEBOX  %c  v2021_11_09_v2`, 'color: orange; font-weight: bold; background: black', 'color: white; font-weight: bold; background: dimgray');
 class JukeboxCard extends HTMLElement {
     set hass(hass) {
         if (!this.content) {
