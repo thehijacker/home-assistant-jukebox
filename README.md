@@ -1,3 +1,12 @@
+# Fork details
+
+This is a fork of original project made/edited/updated by [lukx](https://github.com/lukx/home-assistant-jukebox). I added couple of new functions like:
+
+* Displaying station logo image
+* Adding option to display custom sensor text (song author and title)
+* Fix (workaround) for long playback start for specific radio stations
+* Fix for icons not showing up after HA update to version 2021.11.X
+
 # Jukebox Card for Home-Assistant
 
 This is a media player UI for Home-Assistant leveraging the potential of the excellent new
@@ -10,7 +19,7 @@ You can send different media to different players, which makes it usable for mul
 to some *Frozen*, while you're Jazzing in the Kitchen. Volume-Level is handled separately, too.
 
 ## Screenshot
-![alt text](https://github.com/lukx/home-assistant-jukebox/blob/master/screenshot.png?raw=true "See the jukebox in action")
+![alt text](https://github.com/thehijacker/home-assistant-jukebox/blob/master/screenshot.png?raw=true "See the jukebox in action")
 
 ## Acknowledgement
 Apart from the home-assistant project, I need to say thanks to User [Bob_NL](https://community.home-assistant.io/u/Bob_NL)
@@ -26,7 +35,7 @@ I recommend using [HACS](https://hacs.xyz/) to install and update this integrati
 * In your Home Assistant, open the HACS panel
 * Click on "Frontend" to see the list of Frontend (or "Lovelace") integrations
 * On the top right of your screen, click on the three dots to see "Custom Repositories"
-* in the "Custom Repositories" dialogue, paste `https://github.com/lukx/home-assistant-jukebox.git` in the "custom repository URL" box, and select "Lovelace" as the Category.
+* in the "Custom Repositories" dialogue, paste `https://github.com/thehijacker/home-assistant-jukebox.git` in the "custom repository URL" box, and select "Lovelace" as the Category.
 * Now, in the Frontend Category, search for "Jukebox" and install this module like you would install any other module.
 
 
@@ -48,18 +57,14 @@ views:
     links:
       - url: http://streams.greenhost.nl:8080/jazz
         name: Concertzender Jazz
+        logo: https://raw.githubusercontent.com/home-assistant/assets/master/logo/logo-small.png
+        song: sensor.radio_jazz
       - url: http://fs-insidejazz.fast-serv.com:8282/;stream.nsv
         name: Inside Jazz
+        logo: https://raw.githubusercontent.com/home-assistant/assets/master/logo/logo-small.png
+        song: sensor.radio_inside_jazz
       - url: http://stream.srg-ssr.ch/m/rsj/mp3_128
         name: Radio Swiss Jazz
-      - url: http://stream.beachlatinoradio.com:8030/;?d=
-        name: Beach Latino Radio
-      - url: http://streams.calmradio.com/api/43/128/stream/;?d=
-        name: Calm Radio
-      - url: http://swr-swr1-bw.cast.addradio.de/swr/swr1/bw/mp3/128/stream.mp3
-        name: SWR 1
-      - url: http://94.23.252.14:8067/stream
-        name: Nature Sounds
     entities:
       - media_player.wuerfel_wohnzimmer
       - media_player.wuerfel_kueche
@@ -75,21 +80,16 @@ Example config (note the differances from the above example):
 type: "custom:jukebox-card"
 links:
   - url: http://streams.greenhost.nl:8080/jazz
-    name: Concertzender Jazz
+	name: Concertzender Jazz
+	logo: https://raw.githubusercontent.com/home-assistant/assets/master/logo/logo-small.png
+	song: sensor.radio_jazz
   - url: http://fs-insidejazz.fast-serv.com:8282/;stream.nsv
-    name: Inside Jazz
+	name: Inside Jazz
+	logo: https://raw.githubusercontent.com/home-assistant/assets/master/logo/logo-small.png
+	song: sensor.radio_inside_jazz
   - url: http://stream.srg-ssr.ch/m/rsj/mp3_128
-    name: Radio Swiss Jazz
-  - url: http://stream.beachlatinoradio.com:8030/;?d=
-    name: Beach Latino Radio
-  - url: http://streams.calmradio.com/api/43/128/stream/;?d=
-    name: Calm Radio
-  - url: http://swr-swr1-bw.cast.addradio.de/swr/swr1/bw/mp3/128/stream.mp3
-    name: SWR 1
-  - url: http://94.23.252.14:8067/stream
-    name: Nature Sounds
+	name: Radio Swiss Jazz
 entities:
   - media_player.wuerfel_wohnzimmer
   - media_player.wuerfel_kueche
-
 ```

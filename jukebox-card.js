@@ -1,3 +1,4 @@
+console.info(`%c  HOME-ASSISTANT-JUKEBOX  %c  v2021_11_09_v1`, 'color: orange; font-weight: bold; background: black', 'color: white; font-weight: bold; background: dimgray');
 class JukeboxCard extends HTMLElement {
     set hass(hass) {
         if (!this.content) {
@@ -10,6 +11,7 @@ class JukeboxCard extends HTMLElement {
 
             this.content.appendChild(this.buildSpeakerSwitches(hass));
             this.content.appendChild(this.buildVolumeSlider());
+            this.content.appendChild(this.buildSongDisplay());
             this.content.appendChild(this.buildStationList());
         }
 
@@ -49,7 +51,7 @@ class JukeboxCard extends HTMLElement {
         stationList.classList.add('station-list');
 
         this.config.links.forEach(linkCfg => {
-            const stationButton = this.buildStationSwitch(linkCfg.name, linkCfg.url)
+            const stationButton = this.buildStationSwitch(linkCfg.name, linkCfg.url, linkCfg.logo, linkCfg.song)
             this._stationButtons.push(stationButton);
             stationList.appendChild(stationButton);
         });
@@ -60,6 +62,13 @@ class JukeboxCard extends HTMLElement {
         return stationList;
     }
 
+    buildSongDisplay() {
+        this._song = document.createElement('div');
+        this._song.className = 'song-content';
+        this._hassObservers.push(this.updateSongState.bind(this));
+        return this._song;
+    }
+
     buildVolumeSlider() {
         const volumeContainer = document.createElement('div');
         volumeContainer.className = 'volume center horizontal layout';
@@ -68,6 +77,9 @@ class JukeboxCard extends HTMLElement {
         muteButton.icon = 'hass:volume-high';
         muteButton.isMute = false;
         muteButton.addEventListener('click', this.onMuteUnmute.bind(this));
+        const muteButtonIcon = document.createElement('ha-icon');
+        muteButtonIcon.icon = 'hass:volume-high';
+        muteButton.appendChild(muteButtonIcon);
 
         const slider = document.createElement('ha-slider');
         slider.min = 0;
@@ -79,7 +91,17 @@ class JukeboxCard extends HTMLElement {
         stopButton.icon = 'hass:stop';
         stopButton.setAttribute('disabled', true);
         stopButton.addEventListener('click', this.onStop.bind(this));
+        const stopButtonIcon = document.createElement('ha-icon')
+        stopButtonIcon.icon = 'hass:stop';
+        stopButton.appendChild(stopButtonIcon);
 
+        const powerButton = document.createElement('ha-icon-button')
+        powerButton.icon = 'hass:power';
+        powerButton.setAttribute('disabled', true);
+        powerButton.addEventListener('click', this.onPower.bind(this));
+        const powerButtonIcon = document.createElement('ha-icon')
+        powerButtonIcon.icon = 'hass:power';
+        powerButton.appendChild(powerButtonIcon);
 
         this._hassObservers.push(hass => {
             if (!this._selectedSpeaker || !hass.states[this._selectedSpeaker]) {
@@ -90,10 +112,14 @@ class JukeboxCard extends HTMLElement {
             // no speaker level? then hide mute button and volume
             if (!speakerState.hasOwnProperty('volume_level')) {
                 slider.setAttribute('hidden', true);
-                stopButton.setAttribute('hidden', true)
+                stopButton.setAttribute('hidden', true);
+                powerButton.setAttribute('hidden', true);
+                this._song.setAttribute('hidden', true);
             } else {
                 slider.removeAttribute('hidden');
-                stopButton.removeAttribute('hidden')
+                stopButton.removeAttribute('hidden');
+                powerButton.removeAttribute('hidden');
+                this._song.removeAttribute('hidden');
             }
 
             if (!speakerState.hasOwnProperty('is_volume_muted')) {
@@ -104,6 +130,7 @@ class JukeboxCard extends HTMLElement {
 
             if (hass.states[this._selectedSpeaker].state === 'playing') {
                 stopButton.removeAttribute('disabled');
+                powerButton.removeAttribute('disabled');
             } else {
                 stopButton.setAttribute('disabled', true);
             }
@@ -124,6 +151,7 @@ class JukeboxCard extends HTMLElement {
         volumeContainer.appendChild(muteButton);
         volumeContainer.appendChild(slider);
         volumeContainer.appendChild(stopButton);
+        volumeContainer.appendChild(powerButton);
         return volumeContainer;
     }
 
@@ -149,42 +177,117 @@ class JukeboxCard extends HTMLElement {
         this.hass.callService('media_player', 'media_stop', {
             entity_id: this._selectedSpeaker
         });
+
+        delete this._songEntity;
+        this._song.innerHTML = '';
+    }
+
+    onPower(e) {
+        this.hass.callService('media_player', 'turn_off', {
+            entity_id: this._selectedSpeaker
+        });
+
+        delete this._songEntity;
+        this._song.innerHTML = '';
     }
 
     updateStationSwitchStates(hass) {
         let playingUrl = null;
         const selectedSpeaker = this._selectedSpeaker;
 
-        if (hass.states[selectedSpeaker] && hass.states[selectedSpeaker].state === 'playing') {
+        if (hass.states[selectedSpeaker] && hass.states[selectedSpeaker].state === 'playing'){
             playingUrl = hass.states[selectedSpeaker].attributes.media_content_id;
         }
 
-        this._stationButtons.forEach(stationSwitch => {
-            if (stationSwitch.hasAttribute('raised') && stationSwitch.stationUrl !== playingUrl) {
+        this._stationButtons.forEach(stationSwitch => 
+        {
+            if (stationSwitch.hasAttribute('raised') && stationSwitch.stationUrl !== playingUrl) 
+            {
                 stationSwitch.removeAttribute('raised');
                 return;
             }
-            if (!stationSwitch.hasAttribute('raised') && stationSwitch.stationUrl === playingUrl) {
+            if (!stationSwitch.hasAttribute('raised') && stationSwitch.stationUrl === playingUrl)
+            {
                 stationSwitch.setAttribute('raised', true);
+
+                // Show song entity state for selected station if available
+                if (stationSwitch.stationSong)
+                   this._songEntity = stationSwitch.stationSong;
             }
         })
     }
 
-    buildStationSwitch(name, url) {
+    updateSongState(hass)
+    {
+        if (this._songEntity)
+        {
+            if (this._song.innerHTML != hass.states[this._songEntity].state)
+            {
+                this._song.innerHTML = hass.states[this._songEntity].state;
+            }
+        } else
+        {
+             this._song.innerHTML = '';
+        }
+    }
+
+    buildStationSwitch(name, url, logo, song) {
         const btn = document.createElement('mwc-button');
         btn.stationUrl = url;
+        btn.stationName = name;
+        btn.stationLogo = logo;
+        btn.stationSong = song;
         btn.className = 'juke-toggle';
         btn.innerText = name;
         btn.addEventListener('click', this.onStationSelect.bind(this));
         return btn;
     }
 
-    onStationSelect(e) {
+    onStationSelect(e) {		
+        delete this._songEntity;
+        this._song.innerHTML = '';
+
+        /*
+        // If there is a song entity, display it, otherwise clear it
+        if (e.currentTarget.stationSong)
+        {
+            this._song.innerHTML = this.hass.states[e.currentTarget.stationSong].state;
+            this._songEntity = e.currentTarget.stationSong;
+        } else
+        {
+            delete this._songEntity;
+            this._song.innerHTML = '';
+        }
+        */
+
         this.hass.callService('media_player', 'play_media', {
             entity_id: this._selectedSpeaker,
             media_content_id: e.currentTarget.stationUrl,
-            media_content_type: 'audio/mp4'
+            media_content_type: 'music',
+            extra: {
+                metadata: {
+                stream_type: "LIVE",
+                metadataType: 3,
+                title: e.currentTarget.stationName,
+                artist: "Live Radio",
+                images: [
+                    { url: e.currentTarget.stationLogo }
+                    ]
+                }
+            }
         });
+		
+        // Force play for 10 seconds every half a second
+        var that = this;
+        var i = 0;
+        for (i = 500; i <= 5000; i=i+500)
+        {
+            setTimeout(function() {
+                that.hass.callService('media_player', 'media_play', {
+                    entity_id: that._selectedSpeaker
+                }); }, i);
+        }
+
     }
 
     setVolume(value) {
@@ -228,6 +331,15 @@ class JukeboxCard extends HTMLElement {
     }
 }
 
+function pauseBrowser(millis) 
+{
+    var date = Date.now();
+    var curDate = null;
+    do {
+        curDate = Date.now();
+    } while (curDate-date < millis);
+}
+
 function getStyle() {
     const frag = document.createDocumentFragment();
 
@@ -268,6 +380,12 @@ function getStyle() {
     
     .volume {
         padding: 10px 20px;
+    }
+
+    .song-content {
+        text-align: center;
+        color: green;
+        font-weight: bold;
     }
     
     mwc-button.juke-toggle {
